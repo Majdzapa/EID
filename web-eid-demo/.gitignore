@@ -22,4 +22,3 @@ mvnw.cmd
 # OS
 .DS_Store
 Thumbs.db
-backend/src/main/resources/certs/keystore.p12
