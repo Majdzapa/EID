@@ -17,6 +17,7 @@ This repository contains a complete working demo and comprehensive documentation
 11. [Deployment & Local Environment](deployment.md)
 12. [Troubleshooting](troubleshooting.md)
 13. [Web eID Software Setup Guide](setup-guide.md)
+14. [Web eID Hardware Stack & Workflow](hardware-stack.md)
 
 ## Components
 *   **frontend**: A React application using Vite and TypeScript.
