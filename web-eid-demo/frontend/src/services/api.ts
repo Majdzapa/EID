@@ -1,5 +1,27 @@
 export const api = {
+    // ─── App info (profile) ────────────────────────────────────────────────────
+    getInfo: async (): Promise<{ profile: string; demoModeEnabled: boolean }> => {
+        const res = await fetch('/api/info', { credentials: 'include' })
+        if (!res.ok) return { profile: 'demo', demoModeEnabled: true } // safe default
+        return res.json()
+    },
+
     checkAuth: () => fetch('/api/auth/me', { credentials: 'include' }),
+
+    // ─── Username + Password login ─────────────────────────────────────────────
+    passwordLogin: async (username: string, password: string) => {
+        const res = await fetch('/api/auth/password/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ username, password }),
+        })
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({ error: 'Login failed' }))
+            throw new Error(err.error || 'Login failed')
+        }
+        return res.json()
+    },
 
     // ─── Real Web eID flow ─────────────────────────────────────────────────────
     getChallenge: async () => {

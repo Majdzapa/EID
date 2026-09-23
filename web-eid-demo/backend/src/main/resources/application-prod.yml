@@ -1,0 +1,37 @@
+# ─── PRODUCTION PROFILE ──────────────────────────────────────────────────────
+# Active when running: mvn spring-boot:run -Dspring-boot.run.profiles=prod
+# Disables:
+#   - DemoAuthController (never loaded)
+#   - In-memory admin user (must be replaced with real user store)
+#   - H2 console
+#   - SQL logging
+# Enables:
+#   - Real Web eID validation (AuthController /api/auth/login)
+#   - HTTPS enforcement (configure your TLS cert in server.ssl.*)
+#   - Production-grade CORS (restrict to your real domain)
+
+spring:
+  h2:
+    console:
+      enabled: false
+  jpa:
+    show-sql: false
+
+  # IMPORTANT: Replace with a real UserDetailsService / LDAP / DB-backed users
+  security:
+    user:
+      name: admin
+      # CHANGE THIS! Use a strong password or remove in-memory auth entirely
+      password: "{noop}CHANGE_ME_IN_PRODUCTION"
+      roles: USER
+
+server:
+  # Uncomment and configure for HTTPS in production:
+  # ssl:
+  #   key-store: classpath:keystore.p12
+  #   key-store-password: ${SSL_KEYSTORE_PASSWORD}
+  #   key-store-type: PKCS12
+
+app:
+  profile: prod
+  demo-mode-enabled: false

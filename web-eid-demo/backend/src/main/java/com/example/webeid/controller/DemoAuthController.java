@@ -35,8 +35,10 @@ import java.util.Map;
  * Demo controller that simulates the smart card cryptographic operations on the backend.
  * This allows testing the full authentication flow without a physical eID card.
  *
- * THIS CONTROLLER MUST NEVER BE ENABLED IN PRODUCTION.
+ * Only loaded when the 'demo' Spring profile is active.
+ * Will NOT be registered in production ('prod' profile).
  */
+@Profile("demo")   // ← CRITICAL: never active in prod
 @RestController
 @RequestMapping("/api/auth/demo")
 public class DemoAuthController {

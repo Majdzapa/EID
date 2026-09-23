@@ -1,0 +1,27 @@
+# ─── DEMO PROFILE ────────────────────────────────────────────────────────────
+# Active when running: mvn spring-boot:run -Dspring-boot.run.profiles=demo
+# Enables:
+#   - DemoAuthController (/api/auth/demo/**)  — smart-card simulation
+#   - In-memory user admin/admin for username+password login
+#   - H2 console at /h2-console
+#   - SQL logging
+
+spring:
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    show-sql: true
+
+  # In-memory user for username/password login (admin:admin)
+  security:
+    user:
+      name: admin
+      password: admin
+      roles: USER
+
+# Expose profile name to the frontend via a public endpoint
+app:
+  profile: demo
+  demo-mode-enabled: true

@@ -1,6 +1,8 @@
 spring:
   application:
     name: webeid-demo
+  profiles:
+    active: demo   # Change to 'prod' for production
   datasource:
     url: jdbc:h2:mem:webeiddb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driverClassName: org.h2.Driver
@@ -10,10 +12,10 @@ spring:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
   h2:
     console:
-      enabled: true
+      enabled: false
 
 server:
   port: 8080
