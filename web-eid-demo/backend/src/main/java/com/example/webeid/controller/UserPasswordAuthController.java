@@ -1,5 +1,6 @@
 package com.example.webeid.controller;
 
+import com.example.webeid.security.JwtService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
@@ -7,13 +8,13 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
-import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Handles classic username + password login.
@@ -27,18 +28,16 @@ import java.util.Map;
 public class UserPasswordAuthController {
 
     private final AuthenticationManager authenticationManager;
-    private final SecurityContextRepository securityContextRepository =
-            new HttpSessionSecurityContextRepository();
+    private final JwtService jwtService;
 
-    public UserPasswordAuthController(AuthenticationManager authenticationManager) {
+    public UserPasswordAuthController(AuthenticationManager authenticationManager, JwtService jwtService) {
         this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(
-            @RequestBody Map<String, String> body,
-            HttpServletRequest request,
-            HttpServletResponse response) {
+            @RequestBody Map<String, String> body) {
 
         String username = body.get("username");
         String password = body.get("password");
@@ -54,16 +53,15 @@ public class UserPasswordAuthController {
 
             Authentication authenticated = authenticationManager.authenticate(authRequest);
 
-            // Persist the authenticated context into the HTTP session
-            SecurityContext context = SecurityContextHolder.createEmptyContext();
-            context.setAuthentication(authenticated);
-            SecurityContextHolder.setContext(context);
-            securityContextRepository.saveContext(context, request, response);
+            // Generate JWT
+            UserDetails userDetails = (UserDetails) authenticated.getPrincipal();
+            String jwtToken = jwtService.generateToken(userDetails);
 
             return ResponseEntity.ok(Map.of(
                     "status", "AUTHENTICATED",
                     "user", authenticated.getName(),
-                    "loginMethod", "password"
+                    "loginMethod", "password",
+                    "token", jwtToken
             ));
 
         } catch (BadCredentialsException e) {

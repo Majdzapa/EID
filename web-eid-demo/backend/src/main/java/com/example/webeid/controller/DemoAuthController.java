@@ -15,8 +15,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
-import org.springframework.security.web.context.SecurityContextRepository;
+import com.example.webeid.security.JwtService;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,6 +28,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -45,11 +45,13 @@ public class DemoAuthController {
 
     private final ChallengeNonceGenerator nonceGenerator;
     private final ChallengeNonceStore challengeNonceStore;
+    private final JwtService jwtService;
 
     @Autowired
-    public DemoAuthController(ChallengeNonceGenerator nonceGenerator, ChallengeNonceStore challengeNonceStore) {
+    public DemoAuthController(ChallengeNonceGenerator nonceGenerator, ChallengeNonceStore challengeNonceStore, JwtService jwtService) {
         this.nonceGenerator = nonceGenerator;
         this.challengeNonceStore = challengeNonceStore;
+        this.jwtService = jwtService;
     }
 
     /**
@@ -67,7 +69,6 @@ public class DemoAuthController {
      * 
      * Here, the backend does it server-side for demo/testing purposes ONLY.
      */
-    private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
 
     @PostMapping("/login")
     public ResponseEntity<?> demoLogin(HttpServletRequest request, HttpServletResponse response) {
@@ -109,14 +110,9 @@ public class DemoAuthController {
             String subjectDn = cert.getSubjectX500Principal().getName();
             String displayName = extractCN(subjectDn);
 
-            User userDetails = new User(displayName, "", Collections.emptyList());
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-            
-            SecurityContext context = SecurityContextHolder.createEmptyContext();
-            context.setAuthentication(authentication);
-            SecurityContextHolder.setContext(context);
-            securityContextRepository.saveContext(context, request, response);
+            // Generate JWT token
+            List<String> roles = List.of("ROLE_USER");
+            String jwtToken = jwtService.generateToken(displayName, roles);
 
             return ResponseEntity.ok(Map.of(
                 "status", "AUTHENTICATED",
@@ -129,7 +125,8 @@ public class DemoAuthController {
                     "validUntil", cert.getNotAfter().toString(),
                     "serialNumber", cert.getSerialNumber().toString()
                 ),
-                "simulatedToken", tokenJson
+                "simulatedToken", tokenJson,
+                "token", jwtToken
             ));
 
         } catch (Exception e) {

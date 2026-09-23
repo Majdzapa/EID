@@ -12,6 +12,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
+import com.example.webeid.security.JwtService;
 
 import java.security.cert.X509Certificate;
 import java.util.Collections;
@@ -23,12 +24,14 @@ public class AuthController {
     private final ChallengeNonceGenerator nonceGenerator;
     private final AuthTokenValidator authTokenValidator;
     private final ChallengeNonceStore challengeNonceStore;
+    private final JwtService jwtService;
 
     @Autowired
-    public AuthController(ChallengeNonceGenerator nonceGenerator, AuthTokenValidator authTokenValidator, ChallengeNonceStore challengeNonceStore) {
+    public AuthController(ChallengeNonceGenerator nonceGenerator, AuthTokenValidator authTokenValidator, ChallengeNonceStore challengeNonceStore, JwtService jwtService) {
         this.nonceGenerator = nonceGenerator;
         this.authTokenValidator = authTokenValidator;
         this.challengeNonceStore = challengeNonceStore;
+        this.jwtService = jwtService;
     }
 
     @GetMapping("/challenge")
@@ -54,16 +57,14 @@ public class AuthController {
             // Example for Estonian eID: SERIALNUMBER contains the personal ID code.
             String subjectDn = userCertificate.getSubjectX500Principal().getName();
             
-            // Log user in to Spring Security
-            // For the demo, we just use the Subject DN as the username
-            User userDetails = new User(subjectDn, "", Collections.emptyList());
-            
-            UsernamePasswordAuthenticationToken authentication = 
-                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-            
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            // Extract the common name (CN) to use as username
+            String displayName = extractCN(subjectDn);
 
-            return ResponseEntity.ok().body("{\"status\": \"AUTHENTICATED\", \"user\": \"" + subjectDn + "\"}");
+            // Generate JWT token (simulate DB roles lookup)
+            java.util.List<String> roles = java.util.List.of("ROLE_USER");
+            String jwtToken = jwtService.generateToken(displayName, roles);
+
+            return ResponseEntity.ok().body("{\"status\": \"AUTHENTICATED\", \"user\": \"" + displayName + "\", \"token\": \"" + jwtToken + "\"}");
             
         } catch (Exception e) {
             e.printStackTrace();
@@ -91,5 +92,15 @@ public class AuthController {
     public ResponseEntity<?> logout(jakarta.servlet.http.HttpServletRequest request) {
         SecurityContextHolder.clearContext();
         return ResponseEntity.ok(java.util.Map.of("status", "LOGGED_OUT"));
+    }
+
+    private String extractCN(String subjectDn) {
+        for (String part : subjectDn.split(",")) {
+            String trimmed = part.trim();
+            if (trimmed.startsWith("CN=")) {
+                return trimmed.substring(3);
+            }
+        }
+        return subjectDn;
     }
 }

@@ -58,6 +58,7 @@ export default function Login({ onLogin }: LoginProps) {
     try {
       const result = await api.passwordLogin(username, password)
       if (result.status === 'AUTHENTICATED') {
+        if (result.token) api.setToken(result.token)
         onLogin({
           ...result,
           certificateInfo: {
@@ -88,8 +89,10 @@ export default function Login({ onLogin }: LoginProps) {
       await new Promise(r => setTimeout(r, 600))
       setStep(3)
       const result = await api.demoLogin()
-      if (result.status === 'AUTHENTICATED') onLogin(result)
-      else setError('Unexpected response from server')
+      if (result.status === 'AUTHENTICATED') {
+        if (result.token) api.setToken(result.token)
+        onLogin(result)
+      } else setError('Unexpected response from server')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : 'Demo login failed')
     } finally {
@@ -112,6 +115,7 @@ export default function Login({ onLogin }: LoginProps) {
       setStep(3)
       const loginResult = await api.login(authResponse)
       if (loginResult.status === 'AUTHENTICATED') {
+        if (loginResult.token) api.setToken(loginResult.token)
         onLogin({
           ...loginResult,
           certificateInfo: loginResult.certificateInfo ?? {
