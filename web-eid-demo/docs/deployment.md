@@ -18,7 +18,10 @@ Open a terminal in the `backend/` directory.
 ```bash
 cd backend
 mvn clean install
-mvn spring-boot:run
+# To run in production mode (requires actual smart card and HTTPS origin):
+mvn spring-boot:run -Dspring-boot.run.profiles=prod
+# To run in demo mode (allows simulated login without hardware):
+mvn spring-boot:run -Dspring-boot.run.profiles=demo
 ```
 The backend will start on `http://localhost:8080`.
 *Note: For a real Web eID implementation, the backend MUST be served over HTTPS or be proxied via a tool like `ngrok` during local development, because Web eID performs strict origin checks and requires secure contexts.* For this demo, we bypass strict origin validation if running on localhost, but this is explicitly disabled in production.
@@ -45,16 +48,16 @@ Typically, Spring Boot sits behind a reverse proxy (Nginx, Traefik, AWS ALB).
 *   Ensure `X-Forwarded-Proto: https` and `X-Forwarded-For` are correctly passed so Spring Security knows the connection is secure.
 *   Set HSTS (Strict-Transport-Security) headers.
 
-### 3. Cookie Security
-If using session cookies (`JSESSIONID`):
-*   `Secure = true` (Only send over HTTPS).
-*   `HttpOnly = true` (Prevent JavaScript/XSS access).
-*   `SameSite = Strict` or `Lax` (Prevent CSRF).
+### 3. JWT Security
+This application uses stateless JSON Web Tokens (JWT) instead of session cookies.
+*   The token is stored in the browser's `localStorage` (or `sessionStorage`).
+*   It must be transmitted via the `Authorization: Bearer <token>` header on every request.
+*   Ensure that Cross-Site Scripting (XSS) vulnerabilities are mitigated, as JS-accessible storage is vulnerable to token theft.
 
 ### 4. CORS (Cross-Origin Resource Sharing)
 If the frontend and backend are on different domains (e.g., `app.example.com` and `api.example.com`), configure CORS strictly.
 *   `Access-Control-Allow-Origin` MUST be explicitly set to the frontend URL (no `*`).
-*   `Access-Control-Allow-Credentials: true` (Required to send the session cookie).
+*   `Access-Control-Allow-Headers` must include `Authorization` to permit the JWT.
 
 ### 5. Trust Store Configuration
 In production, you MUST explicitly provide a Java Trust Store (`.jks` or `.p12`) containing the Root CA certificates that issued your users' eID cards. Do not rely on the default OS trust store, as it trusts hundreds of commercial CAs that shouldn't be allowed to issue eID certificates.

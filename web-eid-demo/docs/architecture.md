@@ -14,7 +14,7 @@ Browsers cannot directly communicate with smart cards due to security sandboxing
 *   **Web eID Extension**: A browser extension that intercepts requests from the webpage and forwards them to the native Web eID client application via Native Messaging.
 *   **Web eID Client (Native App)**: Communicates with the smart card reader (via PC/SC / PKCS#11). It displays the UI for PIN entry and executes the cryptographic operations on the smart card.
 *   **Smart Card**: securely stores the user's X.509 certificates and private keys. It performs the actual cryptographic signing when provided with the correct PIN. The private keys *never* leave the card.
-*   **Backend (Spring Boot)**: Generates secure challenge nonces, validates the authentication tokens (signatures) returned by the client against the user's public certificate, performs certificate validation (OCSP, Trust chain), and handles session creation. For document signing, it prepares the data hash, verifies the signature, and constructs the final signed document container (e.g., ASiC-E).
+*   **Backend (Spring Boot)**: Generates secure challenge nonces, validates the authentication tokens (signatures) returned by the client against the user's public certificate, performs certificate validation (OCSP, Trust chain), and handles session creation by issuing JSON Web Tokens (JWT). For document signing, it prepares the data hash, verifies the signature, and constructs the final signed document container (e.g., ASiC-E).
 
 ## 2. Web eID Architecture
 
@@ -46,7 +46,7 @@ sequenceDiagram
     E-->>B: Return Web eID Token
     B->>S: Submit Token for Validation
     S->>S: Verify Signature & Certificate Chain (OCSP)
-    S-->>B: Success (Session Cookie / Signed Doc)
+    S-->>B: Success (JWT / Signed Doc)
 ```
 
 ### References

@@ -23,5 +23,11 @@ This repository contains a complete working demo and comprehensive documentation
 *   **backend**: A Spring Boot Java 21 REST API.
 *   **docs**: Technical documentation.
 
+## Key Features
+*   **Web eID Authentication**: Secure smart-card authentication using the official `web-eid` libraries.
+*   **Stateless JWT Security**: The backend uses stateless JSON Web Tokens (JWT) for session management, rather than traditional cookies.
+*   **Multiple Profiles**: Run with `prod` (requires actual eID hardware and strict HTTPS) or `demo` (allows simulated login without hardware for easy local testing).
+*   **Modern Frontend**: A responsive, modern React UI built with Vite.
+
 ## Quick Start
 See [Deployment & Local Environment](deployment.md) for detailed instructions on running the demo locally.

@@ -304,7 +304,7 @@ This project runs over plain HTTP `localhost` for development, which is supporte
 ```bash
 # Terminal 1 — Start the Spring Boot backend
 cd web-eid-demo/backend
-mvn spring-boot:run
+mvn spring-boot:run -Dspring-boot.run.profiles=demo
 # Backend available at: http://localhost:8080
 
 # Terminal 2 — Start the React frontend

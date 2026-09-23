@@ -41,7 +41,8 @@ sequenceDiagram
     Spring Boot Backend->>Spring Boot Backend: 6. Extract Identity (Subject fields)
     
     Note over Spring Boot Backend: Spring Security Authentication Success
-    Spring Boot Backend-->>React: Set-Cookie (Session) or JWT, Status 200 OK
+    Spring Boot Backend-->>React: Returns JSON Web Token (JWT), Status 200 OK
+    React->>React: Stores JWT in localStorage
     React-->>User: Redirect to Dashboard
 ```
 
@@ -59,7 +60,8 @@ sequenceDiagram
     *   **Signature Verification**: Uses the public key inside the provided certificate to mathematically verify the signature was created by the corresponding private key.
     *   **Certificate Validation**: Checks if the certificate is within its validity period and chains up to a trusted Root CA.
     *   **OCSP Check**: Contacts the Online Certificate Status Protocol (OCSP) responder of the Certificate Authority to ensure the certificate hasn't been revoked (e.g., if the card was lost/stolen).
-8.  **Session Establishment**: If all checks pass, the backend extracts the user's identity from the certificate (e.g., Subject field containing Name and Personal Code), establishes a Spring Security authenticated session, and returns a success response.
+8.  **JWT Issuance**: If all checks pass, the backend extracts the user's identity from the certificate (e.g., Subject field containing Name and Personal Code). It then generates a JSON Web Token (JWT) containing the user's identity and roles, signs it with a secret key, and returns it to the frontend.
+9.  **Session Establishment**: The frontend stores the JWT and includes it in the `Authorization: Bearer <token>` header for all subsequent API requests. The backend validates the JWT on each request, ensuring stateless authentication.
 
 ### References
 *   [Web eID Authentication Protocol](https://github.com/web-eid/web-eid-system-architecture-doc#authentication)

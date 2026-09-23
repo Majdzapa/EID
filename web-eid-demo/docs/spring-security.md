@@ -11,6 +11,7 @@ Controller Layer (AuthRestController)
       |
       v
 Security Filter Chain (Spring Security)
+  - JwtAuthenticationFilter (Parses JWT from headers)
       |
       v
 Authentication Provider (WebEidAuthenticationProvider)
@@ -51,16 +52,17 @@ We then map this certificate to a Spring Security `UserDetails` object:
 3.  **Authentication Object**: Create a `UsernamePasswordAuthenticationToken` (or a custom `WebEidAuthenticationToken`) representing the authenticated user and their authorities/roles.
 4.  **SecurityContextHolder**: Set the authentication object in the `SecurityContextHolder`.
 
-## 4. Session Management
+## 4. Stateless JWT Authentication
 
-Web eID authentication is typically used to establish a **stateful session**.
+This application uses a **stateless** architecture using JSON Web Tokens (JWT).
 
-1.  After setting the `SecurityContextHolder`, Spring Security (if configured with stateful sessions) creates a `JSESSIONID` cookie.
-2.  This cookie is returned to the React frontend.
-3.  Subsequent requests from React include this cookie, bypassing the Web eID validation flow and relying on standard Spring Security session management.
-
-**Stateless Alternative (JWT)**:
-Alternatively, after Web eID validation, the backend could generate a JWT (JSON Web Token), sign it, and return it to the frontend. Subsequent requests would use the `Authorization: Bearer <token>` header. For this demo, we will use standard Spring Session cookies (HttpOnly, Secure, SameSite) as they are generally more secure against XSS for browser-based apps.
+1.  After setting the `SecurityContextHolder` in the `/api/auth/login` endpoint, a `JwtService` generates a JWT.
+2.  The JWT payload includes the user's `subject` (username/DN) and their assigned roles (e.g., `ROLE_USER`).
+3.  The JWT is signed with a secret key (HMAC SHA-256) and returned to the React frontend in the JSON response payload (`{"token": "..."}`).
+4.  The frontend stores the JWT (e.g., in `localStorage`) and attaches it to all subsequent requests using the `Authorization: Bearer <token>` header.
+5.  A custom `JwtAuthenticationFilter` intercepts incoming requests. If a Bearer token is found, it validates the token's signature and expiration using `jjwt`.
+6.  If valid, the filter reconstructs the `UsernamePasswordAuthenticationToken` (with the extracted roles) and places it into the `SecurityContextHolder`, authorizing the request.
+7.  The Spring Security `SessionCreationPolicy` is explicitly set to `STATELESS`, ensuring no `JSESSIONID` cookies are created or used.
 
 ## 5. Security Considerations
 
