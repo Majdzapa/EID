@@ -18,4 +18,10 @@ spring:
       enabled: false
 
 server:
-  port: 8080
+  port: 8443
+  ssl:
+    enabled: true
+    key-store: classpath:certs/keystore.p12
+    key-store-password: changeit
+    key-store-type: PKCS12
+    key-alias: webeid
