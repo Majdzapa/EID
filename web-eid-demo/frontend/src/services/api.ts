@@ -81,23 +81,62 @@ export const api = {
         return fetch('/api/auth/logout', { method: 'POST' })
     },
 
-    prepareDocument: async (fileContentBase64: string, fileName: string) => {
-        const response = await api.fetchWithAuth('/api/documents/prepare', {
+    // ─── Document Management ───────────────────────────────────────────────────
+
+    uploadDocument: async (file: File) => {
+        const formData = new FormData()
+        formData.append('file', file)
+        
+        const token = api.getToken()
+        const headers = new Headers()
+        if (token) headers.set('Authorization', `Bearer ${token}`)
+
+        const response = await fetch('/api/documents/upload', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fileContentBase64, fileName })
+            headers, // Do NOT set Content-Type, browser will set it with boundary
+            body: formData
         })
+        if (!response.ok) throw new Error(await response.text())
+        return response.json()
+    },
+
+    listDocuments: async () => {
+        const response = await api.fetchWithAuth('/api/documents')
+        if (!response.ok) throw new Error('Failed to list documents')
+        return response.json()
+    },
+
+    // ─── Real Web eID Signing ──────────────────────────────────────────────────
+
+    prepareDocumentSign: async (documentId: number) => {
+        const response = await api.fetchWithAuth(`/api/documents/${documentId}/prepare-sign`)
         if (!response.ok) throw new Error('Failed to prepare document')
         return response.json()
     },
 
-    signDocument: async (signatureData: unknown) => {
-        const response = await api.fetchWithAuth('/api/documents/sign', {
+    finalizeDocumentSign: async (documentId: number, signature: string, algorithm: string, certificate: string) => {
+        const response = await api.fetchWithAuth(`/api/documents/${documentId}/sign`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(signatureData)
+            body: JSON.stringify({ signature, algorithm, certificate })
         })
-        if (!response.ok) throw new Error('Failed to sign document')
+        if (!response.ok) throw new Error('Failed to finalize document sign')
+        return response.json()
+    },
+
+    signHash: async (hashToSign: string, signature: string, algorithm: string, certificate: string) => {
+        const response = await api.fetchWithAuth('/api/sign/hash', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ hashToSign, signature, algorithm, certificate })
+        })
+        if (!response.ok) throw new Error('Failed to sign hash')
+        return response.json()
+    },
+
+    listSignatures: async () => {
+        const response = await api.fetchWithAuth('/api/signatures')
+        if (!response.ok) throw new Error('Failed to list signatures')
         return response.json()
     }
 }
