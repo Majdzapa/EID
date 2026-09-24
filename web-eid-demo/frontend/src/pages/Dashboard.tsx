@@ -84,9 +84,8 @@ export default function Dashboard({ user, subjectDn, certificateInfo, onLogout }
       
       // 1. Get the signing certificate from the card
       const certOptions = { type: 'SIGN' } // Filter for signing certs
-      // The ts-ignore is used because exact types might differ slightly based on library version, but this is the standard flow
       // @ts-ignore
-      const certResponse = await webEid.getCertificate(certOptions)
+      const certResponse = await webEid.getSigningCertificate(certOptions)
 
       // 2. Sign the hash using the obtained certificate
       const signResponse = await webEid.sign(certResponse.certificate, hashToSign, hashAlgorithm)
@@ -121,7 +120,7 @@ export default function Dashboard({ user, subjectDn, certificateInfo, onLogout }
       
       const certOptions = { type: 'SIGN' }
       // @ts-ignore
-      const certResponse = await webEid.getCertificate(certOptions)
+      const certResponse = await webEid.getSigningCertificate(certOptions)
 
       const hashAlgorithm = 'SHA-384'
       const signResponse = await webEid.sign(certResponse.certificate, rawHash, hashAlgorithm)
